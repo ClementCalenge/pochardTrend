@@ -1,0 +1,487 @@
+\documentclass[a4paper]{article}
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Estimation of the Common Pochard Population Trend in Europe 2002 to 2012}
+%\VignetteDepends{knitr,ggplot2,sf,spdep,MASS}
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{url}
+\usepackage{amsfonts}
+%\usepackage{pdfcolmk}
+\usepackage{epsfig}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\usepackage{longtable}
+%\usepackage{natbib}
+\usepackage{ucs}
+\usepackage{savesym}
+\savesymbol{iint}
+\savesymbol{iiint}
+\usepackage{amsmath}
+\usepackage{rotating}
+\usepackage{appendix}
+%\usepackage[utf8]{inputenc}
+\newlength{\defaultparindent}
+\setlength{\defaultparindent}{\parindent}
+\newenvironment{Default Paragraph Font}{}{}
+\newcommand{\INT}[1]{\stackrel{\circ}{#1}}
+\topmargin -1.5cm
+\headheight 0.5cm
+\headsep 1.0cm
+\topskip 0.5cm
+\textheight 24.5cm
+\footskip 1.0cm
+\oddsidemargin 0.0cm
+\evensidemargin 0.0cm
+\textwidth 16cm
+\parskip 0.2cm
+\parindent 1.0cm
+\baselineskip 0.2cm
+
+
+
+\title{ Assessing spatio-temporal variation in abundance: a flexible
+  framework accounting for sampling bias and an application to
+  Vulnerable Common Pochard (\textit{Aythya ferina})}
+\author{Benjamin Folliot, Clement Calenge, Alain Caizergue, Adrien
+  Tableau,\\
+  Guillaume Souchay, Matthieu Guillemain, Jocelyn Champagnon.}
+\date{September 2021}
+
+\setlength{\parindent}{0cm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+<<setup, include=FALSE, cache=FALSE>>=
+# set global chunk options
+library('knitr')
+opts_chunk$set(fig.path="caperpy-",
+               fig.align="center",
+               fig.show="hold",
+               echo=TRUE,
+               results="markup",
+               fig.width=10,
+               fig.height=10, out.width='\\linewidth',
+               out.height='\\linewidth',
+               cache=FALSE,
+               dev='png',
+               concordance=TRUE,
+               error=FALSE)
+opts_knit$set(aliases = c(h = 'fig.height',
+              w = 'fig.width',
+              wo='out.width',
+              ho='out.height'))
+options(replace.assign=TRUE,width=60)
+set.seed(9567)
+@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%                                                            %%%%
+%%%%                  The vignette starts here                  %%%%
+%%%%                                                            %%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+
+\section{Introduction}
+
+This vignette describes how Folliot et al. (in prep.) estimated the
+population trend of Common pochard (\textit{Aythya ferina}) in Europe
+from 2002 to 2012 (Folliot et al. \textit{Quantifying spatio-temporal
+  variation in abundance: a flexible framework accounting for sampling
+  bias}). The package \texttt{pochardTrend} contains all the functions
+used in this paper, and is required to reproduce the calculations in
+this document. Note that due to copyright issues, we could not include
+the original dataset in this package, and we replaced the original
+dataset with a simulated dataset. However, note that the R object
+storing the results of the model fit on the original dataset is
+available in the package. Therefore, if the reader reproduces the
+calculations on the simulated dataset, they will not obtain the exact
+same model fit as the one stored in the dataset \texttt{fittedModel}.\\
+
+This vignette also describes checks carried out to validate the
+model. To install this package, first install the package
+\texttt{devtools} and use the function \texttt{install\_github} to
+install \texttt{pochardTrend}:
+
+<<eval=FALSE>>=
+## If devtools is not yet installed, type
+install.packages("devtools")
+
+## Install the package caperpyogm
+devtools::install_github("ClementCalenge/pochardTrend", ref="main")
+@ 
+
+\textit{Remark}: on Windows, it is required to also install the Rtools
+(\url{https://cran.r-project.org/bin/windows/Rtools/}) on your
+computer to have a working \texttt{devtools} package (see
+\url{https://www.r-project.org/nosvn/pandoc/devtools.html}).\\
+
+The package can then be loaded with:
+
+<<>>=
+library(pochardTrend)
+@ 
+
+
+\section{Description of the data and model}
+\label{sec:descr}
+
+
+\subsection{The datasets}
+\label{sec:datasets}
+
+We work on the dataset pochard, which contains the results of counts
+carried out on 981 sites thoughout northern Europe:
+
+<<>>=
+head(pochard)
+@
+
+This dataset is a data.frame containing for each \texttt{year} and
+\texttt{site}, the result of the \texttt{count}. Due to the
+confidentiality policy of Wetlands International, we could not include
+the coordinates of the sites. Moreover, for the same reasons, we could
+not deliver the actual values of \texttt{count}: we had to simulate
+this vector of values. However, the location of the 75 $\times$ 75
+grid cells containing the sites could be provided. We give in the
+column \texttt{idg} the ID of the grid cell containing the site, and
+in the columns \texttt{longq} and \texttt{latq} the longitude/latitude
+of the centroid of the grid cells. Note that the distribution of the
+grid cells over Europe can be displayed with the datasets
+\texttt{quadratMap} and \texttt{euromap}:
+
+
+<<>>=
+plot(euromap, col="grey")
+plot(quadratMap, col="yellow", add=TRUE)
+@ 
+
+
+\subsection{The model}
+\label{sec:model}
+
+
+It is supposed throughout this vignette that the reader is familiar
+with the model developed in this paper. Nevertheless, we will present
+a brief reminder on this model in this introduction.\\
+
+
+Let $N_{it}$ be the number of animals counted in the site $i$ in year
+$t$. We suppose that $N_{it}$ follows a Poisson distribution with expectation
+$\lambda_{it}$:
+$$
+N_{it}\sim \mathcal{P}(\lambda_{it})
+$$
+We model this expectation with:
+$$
+\log \lambda_{it} = \alpha_i + (\beta_0 + d_i) \times t + e_{it}
+$$
+with $e_{it}$ a gaussian residual characterizing site $i$ and year
+$t$, with mean 0 and standard deviation $\sigma_e$, $\alpha_i$ is a
+site-specific intercept, $\beta_0$ is the fixed slope of the year, and
+$d_i$ is a site random effect on this slope. This random effect
+follows a Gaussian distribution with a mean $b_{q(i)}$ characterizing
+the grid cell $q(i)$ containing the site $i$, and a standard deviation
+$\sigma_d$:
+$$
+d_i \sim \mathcal{N}(b_{q(i)}, \sigma_d)
+$$
+The grid cell mean random effect is itself modelled by a Gaussian
+distribution:
+$$
+b_{q(i)} \sim \mathcal{N}(\gamma \times L_{q(i)}, \sigma_b)
+$$
+with $\gamma$ the slope of the latitude $L_{q(i)}$ of the grid cell
+$q(i)$.
+
+
+\section{Model fit and model checks}
+\label{sec:model-fit-model}
+
+\subsection{Model fit}
+\label{sec:model-fit-1}
+
+The model can be fitted to the dataset \texttt{pochard} with the
+function \texttt{fitModel}. WARNING: this function is very long and
+may take several minutes to complete. Impatient users can skip this
+command, as the result is available in the dataset
+\texttt{fittedModel} of the package:
+
+<<eval=FALSE>>=
+fittedModel <- fitModel(pochard$count, pochard$site, pochard$year,
+                        pochard$idg, pochard$latq)
+@
+
+Note that the dataset \texttt{fittedModel} of the package contains the
+results of the model fit on the original (i.e., not simulated)
+dataset. In other words, if the reader executes this command line, the
+resulting object will not be identical to the object
+\texttt{fittedModel} of the package.  We interpret this model in a
+later section.
+
+\subsection{Model checks}
+\label{sec:model-check}
+
+
+\subsubsection{Gaussian distribution of the random effects}
+\label{sec:gauss-distr-rand}
+
+We first check that the distribution of the random effects $d_i$ and
+$b_{q(i)}$ is Gaussian as expected with a quantile-quantile plot:
+
+<<fig.width=12, fig.height=6, out.width='\\linewidth', out.height='0.5\\linewidth',>>=
+par(mfrow = c(1,2))
+qqnorm(fittedModel$random$bqi[,2], main="Random effect grid cell b_q(i)")
+qqnorm(fittedModel$random$di[,2], main="Random effect site d_i")
+@ 
+
+These plots are ok. We also show the distribution of the residuals
+$e_{it}$:
+
+<<>>=
+qqnorm(fittedModel$random$eit)
+@ 
+
+Note that these residuals seem randomly distributed as a function of
+the year:
+
+<<>>=
+library(ggplot2)
+dae <- data.frame(year=pochard$year, eit=fittedModel$random$eit)
+ggplot(dae,aes(x=factor(year), y=eit))+geom_violin()+
+    geom_boxplot(width=0.2, fill="grey")
+@ 
+
+No problematic pattern can be highlighted regarding the distribution
+of random effects.
+
+
+\subsubsection{Absence of spatial autocorrelation in the random effects}
+\label{sec:absence-autoc}
+
+We carried out a Moran test of the spatial autocorrelation of the grid
+cells random effects. We first define a relative neighbor graph based
+on the coordinates of the grid cell centroid (see the help page of
+\texttt{relativeneigh} in the package spdep):
+
+<<>>=
+## Coordinates of the centroids of the grid cells 
+xy <- st_coordinates(st_centroid(quadratMap))
+
+## calculate the neighbourhood graph from the coordinates
+## of the centroids
+library(spdep)
+gnb <- graph2nb(relativeneigh(xy), sym=TRUE)
+## We remove a weird neighbouring relationship
+gnb[[185]] <- 184L
+gnb[[184]] <- 185L
+@ 
+
+We then carry out the Moran test:
+
+<<>>=
+## Moran test
+moran.test(fittedModel$random$bqi[,2], nb2listw(gnb))
+@ 
+
+
+This test is non-significant. We have removed all the major
+autocorrelation from this dataset. Note that another Moran test was
+carried out on the site effects in our paper. Since we could not
+include the coordinates of the sites in the package
+\texttt{pochardTrend} (due to confidentiality reasons), we cannot
+perform this test in this vignette (though the code is identical to
+the code used at the scale of the grid cell).
+
+
+\section{Model interpretation}
+\label{sec:model-interpretation}
+
+We can show the main estimates from the model with:
+
+<<>>=
+fittedModel
+@ 
+
+\subsection{Estimate of the population decline}
+\label{sec:estim-popul-decl}
+
+
+Therefore, the median slope of the relationship between year and
+log-count is:
+$$
+0.3823 - 0.0084\times \mbox{Latitude}
+$$
+The latitude varies between 46$^{\circ}$  and 60$^{\circ}$. Therefore
+the median slope of the relationship between year and log-count varies
+between these two values: 
+
+<<>>=
+beta0 <- fittedModel$fixed$beta0
+latitude_effect <- fittedModel$fixed$latitude_effect
+
+beta0 + latitude_effect*c(46,60)
+@ 
+
+However, this variation on a log-scale is difficult to interpret. We
+can back transform these values to the linear scale, but this would
+only give the point estimates for the change rate.\\
+
+We can calculate mean and standard error rate of change with
+simulations. Indeed, with a mixed effects model, the vector of
+estimated parameters $(\hat{\beta}_0, \hat{\gamma})$ is expected to
+follow a bivariate Gaussian distribution with a covariance matrix
+returned by \texttt{fitModel}. We can then simulate random vectors
+from this distribution, and back-transform the resulting slopes on a
+linear scale to calculate both the point estimate and the standard
+error of these rate of changes at the two latitudes:
+
+<<>>=
+## We load MASS to simulate a multivariate
+library(MASS)
+
+## Covariance matrix for the two coefficients
+co <- cf <- fittedModel$rawTMB$cov.fixed[c("beta0","latitude_effect"),
+                                         c("beta0","latitude_effect")]
+
+## Simulate 100 000 values from the bivariate Gaussian distribution
+simv <- mvrnorm(100000, c(beta0, latitude_effect), co)
+
+## Decrease per year
+## at 60 degrees latitude
+dimpa60 <- (1-exp(apply(simv,1,function(x) x[2]*60+x[1])))
+
+## at 46 degrees latitude
+dimpa46 <- (1-exp(apply(simv,1,function(x) x[2]*46+x[1])))
+
+
+## point estimate and SE at 60 degrees
+1-exp(beta0+latitude_effect*60)
+## SE
+sd(dimpa60)
+
+## point estimate and SE at 46 degrees
+1-exp(beta0+latitude_effect*46)
+sd(dimpa46)
+@
+
+The counts decrease of 11.6\% per year at 60$^{\circ}$ (SE = 1.8\%),
+and of 0.54\% per year at 46$^{\circ}$ (SE = 1.4\%).\\
+
+We can similarly estimate the decrease over the 11 years of the study
+period 2002-2012:
+
+<<>>=
+dimpe60 <- (1-exp(apply(simv,1,function(x) 11*(x[2]*60+x[1]))))
+dimpe46 <- (1-exp(apply(simv,1,function(x) 11*(x[2]*46+x[1]))))
+
+## 60 degrees
+1-exp(11*(beta0+latitude_effect*60))
+sd(dimpe60)
+
+## 46 degrees
+1-exp(11*(beta0+latitude_effect*46))
+sd(dimpe46)
+@ 
+
+The population decline averages 74\% (SE=6\%) over the whole period at
+60$^{\circ}$ and 5.7\% (SE=14\%) at 46$^{\circ}$.\\
+
+Finally, we can calculate the yearly decline at the average latitude:
+
+<<>>=
+## Point estimate
+1-exp(beta0+latitude_effect*mean(pochard$latq))
+
+## SE
+dimens <- (1-exp(apply(simv,1,function(x) x[2]*mean(pochard$latq)+x[1])))
+sd(dimens)
+@ 
+
+The yearly decline is equal to 4.9\% (SE=0.6\%), which represents an
+overall decline of:
+
+<<>>=
+## Point estimate
+1-exp(11*(beta0+latitude_effect*mean(pochard$latq)))
+
+## SE
+dimenso <- (1-exp(apply(simv,1,function(x) 11*(x[2]*mean(pochard$latq)+x[1]))))
+sd(dimenso)
+@ 
+
+42\% (SE = 4\%).\\
+
+We can show the estimated trend with:
+
+<<>>=
+lat <- seq(45, 60, by=5)
+lat[1] <- 46
+
+showTrends(fittedModel, 2002:2012,lat)+theme(legend.position = "none")
+@ 
+
+See the paper for a description of this figure.
+
+
+\subsection{Estimate of the variance parameters (and their SE)}
+\label{sec:estim-var-param}
+
+To increase the stability of the estimation process, the function
+\texttt{fitModel} log-transforms the standard deviation parameters
+(i.e. the standard deviation of random effects). Therefore, the
+results below present the value of the logarithm of the standard
+deviation parameters:
+
+<<>>=
+fittedModel
+@ 
+
+The results show the point estimate of the standard deviation, but as
+in the last section, it is difficult to back-transform the standard
+errors of these SD -- which are measured on a log-scale -- to a linear
+scale. We therefore use an approach similar to the one used in the
+last section: we simulate values of the log-SD from a Gaussian
+distribution on the log-scale and back-transform them to the linear
+scale to calculate the standard errors on the linear scale (these SE
+are the values displayed in the paper):
+
+<<>>=
+## sigma_bqi
+## point estimate
+mean(exp(rnorm(100000, fittedModel$rawTMB$par.fixed["log_sigmabqi"],
+               sqrt(fittedModel$rawTMB$cov.fixed["log_sigmabqi","log_sigmabqi"]))))
+## SE
+sd(exp(rnorm(100000, fittedModel$rawTMB$par.fixed["log_sigmabqi"],
+             sqrt(fittedModel$rawTMB$cov.fixed["log_sigmabqi","log_sigmabqi"]))))
+
+## sigma_di
+## point estimate
+mean(exp(rnorm(100000, fittedModel$rawTMB$par.fixed["log_sigmadi"],
+               sqrt(fittedModel$rawTMB$cov.fixed["log_sigmadi","log_sigmadi"]))))
+## SE
+sd(exp(rnorm(100000, fittedModel$rawTMB$par.fixed["log_sigmadi"],
+             sqrt(fittedModel$rawTMB$cov.fixed["log_sigmadi","log_sigmadi"]))))
+
+## sigma_e
+## point estimate
+mean(exp(rnorm(100000, fittedModel$rawTMB$par.fixed["log_sigmae"],
+               sqrt(fittedModel$rawTMB$cov.fixed["log_sigmae","log_sigmae"]))))
+## SE
+sd(exp(rnorm(100000, fittedModel$rawTMB$par.fixed["log_sigmae"],
+             sqrt(fittedModel$rawTMB$cov.fixed["log_sigmae","log_sigmae"]))))
+@ 
+
+
+
+
+
+\end{document}

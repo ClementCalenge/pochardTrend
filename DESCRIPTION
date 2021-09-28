@@ -1,0 +1,16 @@
+Package: pochardTrend
+Type: Package
+Title: Estimation of the Pochard Population Trend in Europe
+Version: 1.0
+Date: 2021-03-04
+Depends: R (>= 3.5.0), TMB, RcppEigen, sf
+Imports: ggplot2, MASS, rlang
+Suggests: spdep
+LinkingTo: TMB, RcppEigen
+Suggests: knitr
+LazyData: true
+Author: Clement Calenge
+Maintainer: Clement Calenge <clement.calenge@ofb.gouv.fr>
+Description: Functions and data for the estimation of the common pochard population trend in Europe, from 2002 to 2012, with data collected by the International Waterbird Census (Waterbirds International), as described in Folliot et al. (in prep.).
+VignetteBuilder: knitr
+License: GPL (>= 2)

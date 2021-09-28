@@ -1,0 +1,16 @@
+useDynLib(pochardTrend)
+export("fitModel", "print.modelPochard",
+        "summary.modelPochard","showTrends")
+
+import(TMB)
+importFrom("stats", "optim", "rnorm")
+importFrom("MASS", "mvrnorm")
+importFrom("stats", "quantile")
+importFrom("sf", "read_sf")
+importFrom("RcppEigen", "fastLm")
+importFrom("rlang", ".data")
+
+
+
+S3method(print, modelPochard)
+S3method(summary, modelPochard)
