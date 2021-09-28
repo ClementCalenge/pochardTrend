@@ -27,9 +27,10 @@
   }
 }
 \source{
-  
-  International Waterbird Census, Wetlands International.  P.O. Box 471,
-  6700 AL Wageningen.  The Netherlands.
+
+  Due to copyright issues, we could not include the original dataset in
+  the package.  We simulated a dataset with the same properties as the
+  original dataset.
 
 }
 \references{
@@ -37,7 +38,7 @@
   Folliot, B., Calenge, C., Caizergues, A., Tableau, A., Souchay, G.,
   Guillemain, M. and Champagnon, J. (in prep.) Assessing spatio-temporal
   variation in abundance: a flexible framework accounting for sampling
-  bias and an application to Vulnerable Common Pochard (Aythya ferina).
+  bias with an application to Vulnerable Common Pochard (Aythya ferina).
 
 }
 \examples{

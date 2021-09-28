@@ -7,8 +7,10 @@
 \description{
   This dataset contains the model fitted in Folliot et al. (in
   prep.). It was obtained with the function \code{fitModel} used on the
-  dataset \code{pochard} of the package (see
-  Examples) .
+  original dataset.  Due to copyright issue we could not include the
+  census dataset in the package, but the simulated dataset
+  \code{pochard} of the package has the same properties (see
+  Examples).
 }
 \usage{data("pochard")}
 \format{
@@ -30,7 +32,7 @@
   Folliot, B., Calenge, C., Caizergues, A., Tableau, A., Souchay, G.,
   Guillemain, M. and Champagnon, J. (in prep.) Assessing spatio-temporal
   variation in abundance: a flexible framework accounting for sampling
-  bias and an application to Vulnerable Common Pochard (Aythya ferina).
+  bias with an application to Vulnerable Common Pochard (Aythya ferina).
   
 }
 \examples{
@@ -45,8 +47,13 @@ fittedModel <- fitModel(pochard$count, pochard$site, pochard$year,
 
 }
 
-## Which gives
+## Which gives an object similar to
 fittedModel
+
+## Note that this is not exactly the same object, as fittedModel was
+## fitted to the original dataset, and as because of copyright issues
+## we could not include the original dataset in the package. The
+## dataset pochard is a simulated dataset with similar properties.
 
 }
 \keyword{datasets}

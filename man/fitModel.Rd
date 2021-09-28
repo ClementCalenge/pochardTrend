@@ -94,7 +94,7 @@ fitModel(count, site, year, quadrat, latQuadrat, sv, control = list())
   Folliot, B., Calenge, C., Caizergues, A., Tableau, A., Souchay, G.,
   Guillemain, M. and Champagnon, J. (in prep.) Assessing spatio-temporal
   variation in abundance: a flexible framework accounting for sampling
-  bias and an application to Vulnerable Common Pochard (Aythya ferina). 
+  bias with an application to Vulnerable Common Pochard (Aythya ferina).
 
 }
 \author{

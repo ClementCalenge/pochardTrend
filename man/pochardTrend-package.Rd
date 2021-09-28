@@ -24,7 +24,7 @@ Maintainer: \packageMaintainer{pochardTrend}
   Folliot, B., Calenge, C., Caizergues, A., Tableau, A., Souchay, G.,
   Guillemain, M. and Champagnon, J. (in prep.) Assessing spatio-temporal
   variation in abundance: a flexible framework accounting for sampling
-  bias and an application to Vulnerable Common Pochard (Aythya ferina).
+  bias with an application to Vulnerable Common Pochard (Aythya ferina).
 
 
 }
@@ -48,5 +48,10 @@ fittedModel <- fitModel(pochard$count, pochard$site, pochard$year,
 ## Which gives the following dataset (available
 ## as a dataset of the package)
 fittedModel
+
+## Note that this is not exactly the same object, as fittedModel was
+## fitted to the original dataset, and as because of copyright issues
+## we could not include the original dataset in the package. The
+## dataset pochard is a simulated dataset with similar properties.
 
 }

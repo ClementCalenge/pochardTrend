@@ -48,9 +48,9 @@ showTrends(model, year, lat, nrep = 1000, levelIC = c(0.025, 0.975),
 \references{
 
   Folliot, B., Calenge, C., Caizergues, A., Tableau, A., Souchay, G.,
-  Guillemain, M. and Champagnon, J. (in prep.) Quantifying
-  spatio-temporal variation in abundance: a flexible framework
-  accounting for sampling bias.
+  Guillemain, M. and Champagnon, J. (in prep.) Assessing spatio-temporal
+  variation in abundance: a flexible framework accounting for sampling
+  bias with an application to Vulnerable Common Pochard (Aythya ferina).
 
 }
 \author{
