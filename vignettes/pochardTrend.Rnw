@@ -44,7 +44,7 @@
 \author{Benjamin Folliot, Clement Calenge, Alain Caizergue, Adrien
   Tableau,\\
   Guillaume Souchay, Matthieu Guillemain, Jocelyn Champagnon.}
-\date{September 2021}
+\date{February 2022}
 
 \setlength{\parindent}{0cm}
 
@@ -154,9 +154,15 @@ this vector of values. However, the location of the 75 $\times$ 75
 grid cells containing the sites could be provided. We give in the
 column \texttt{idg} the ID of the grid cell containing the site, and
 in the columns \texttt{longq} and \texttt{latq} the longitude/latitude
-of the centroid of the grid cells. Note that the distribution of the
-grid cells over Europe can be displayed with the datasets
-\texttt{quadratMap} and \texttt{euromap}:
+of the centroid of the grid cells. Note that only the latitude is used
+in the model of pochard trends, to assess possible differences in
+trends over the species’ range on a North-South axis, due to migratory
+short-stopping (shortening of migration distance leading to increasing
+numbers at high latitudes and decreasing numbers at low latitudes) in
+response to increasing winter temperatures. Longitude is also included
+in the dataset to allow the graphical display of maps of cell centers.
+Note that the distribution of the grid cells over Europe can be
+displayed with the datasets \texttt{quadratMap} and \texttt{euromap}:
 
 
 <<>>=
